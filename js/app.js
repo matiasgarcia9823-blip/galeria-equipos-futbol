@@ -1,17 +1,17 @@
 // Seleccionamos los elementos del DOM
 const galeria = document.getElementById("galeria");
 const btnCargar = document.getElementById("cargar");
-const selectLiga = document.getElementById("liga"); // Capturamos el nuevo menú
+const selectLiga = document.getElementById("liga"); 
+const inputBuscar = document.getElementById("buscar"); // Capturamos el buscador
 
 // Función asíncrona para consumir la API
 async function cargarDatos() {
   galeria.innerHTML = "<p>Cargando equipos...</p>";
 
-  // Tomamos el valor exacto del menú (ej: "English League Championship") y lo preparamos para la URL
+  // Tomamos el valor exacto del menú y lo preparamos para la URL
   const ligaActiva = encodeURIComponent(selectLiga.value);
 
   try {
-    // Usamos comillas invertidas (backticks `) para inyectar la variable ${ligaActiva} en el enlace
     const res = await fetch(`https://www.thesportsdb.com/api/v1/json/3/search_all_teams.php?l=${ligaActiva}`);
     
     if (!res.ok) throw new Error("Error en la conexión: " + res.status);
@@ -45,6 +45,18 @@ async function cargarDatos() {
       `;
       
       galeria.appendChild(card);
+
+      // MEJORA: Hacemos que toda la tarjeta sea seleccionable (clickable)
+      card.addEventListener("click", (e) => {
+        // Evitamos abrir dos pestañas si el usuario hace clic exactamente en el enlace <a>
+        if (e.target.tagName.toLowerCase() === 'a') return;
+
+        if (equipo.strWebsite) {
+          window.open(urlSitio, "_blank");
+        } else {
+          alert("Este equipo no tiene sitio web oficial registrado en la base de datos.");
+        }
+      });
     });
 
   } catch (error) {
@@ -53,8 +65,27 @@ async function cargarDatos() {
   }
 }
 
-// Escuchamos el clic en el botón principal
+// Escuchamos los eventos de carga y cambios de liga
 btnCargar.addEventListener("click", cargarDatos);
-
-// NUEVO: Hacemos que si el usuario cambia el menú desplegable, las tarjetas se actualicen solas sin apretar el botón
 selectLiga.addEventListener("change", cargarDatos);
+
+// RETO BONUS: Lógica para el Buscador en Vivo
+inputBuscar.addEventListener("input", (e) => {
+  // Capturamos lo que el usuario escribe y lo pasamos a minúsculas
+  const textoBusqueda = e.target.value.toLowerCase();
+  
+  // Seleccionamos todas las tarjetas que están actualmente renderizadas en pantalla
+  const tarjetas = document.querySelectorAll(".tarjeta");
+
+  // Recorremos cada tarjeta para ver si el nombre coincide con la búsqueda
+  tarjetas.forEach(tarjeta => {
+    const nombreEquipo = tarjeta.querySelector("h3").textContent.toLowerCase();
+    
+    // Mostramos la tarjeta si hay coincidencia, la ocultamos si no
+    if (nombreEquipo.includes(textoBusqueda)) {
+      tarjeta.style.display = "block";
+    } else {
+      tarjeta.style.display = "none";
+    }
+  });
+});
