@@ -1,34 +1,41 @@
 // Seleccionamos los elementos del DOM
 const galeria = document.getElementById("galeria");
 const btnCargar = document.getElementById("cargar");
+const selectLiga = document.getElementById("liga"); // Capturamos el nuevo menú
 
 // Función asíncrona para consumir la API
 async function cargarDatos() {
   galeria.innerHTML = "<p>Cargando equipos...</p>";
 
+  // Tomamos el valor exacto del menú (ej: "English League Championship") y lo preparamos para la URL
+  const ligaActiva = encodeURIComponent(selectLiga.value);
+
   try {
-    const res = await fetch("https://www.thesportsdb.com/api/v1/json/3/search_all_teams.php?l=English%20Premier%20League");
+    // Usamos comillas invertidas (backticks `) para inyectar la variable ${ligaActiva} en el enlace
+    const res = await fetch(`https://www.thesportsdb.com/api/v1/json/3/search_all_teams.php?l=${ligaActiva}`);
     
     if (!res.ok) throw new Error("Error en la conexión: " + res.status);
 
     const datos = await res.json();
-    const equipos = datos.teams; 
+    
+    // Validación de seguridad por si la API no encuentra datos en alguna liga
+    if (!datos.teams) {
+         galeria.innerHTML = "<p>No se encontraron equipos para esta liga.</p>";
+         return;
+    }
 
+    const equipos = datos.teams; 
     galeria.innerHTML = ""; 
 
     equipos.forEach(equipo => {
       if (!equipo || !equipo.strTeam) return; 
 
-      // SOLUCIÓN BUG 1: Validamos ambas propiedades de imagen y damos un escudo por defecto si falla
       const escudo = equipo.strBadge || equipo.strTeamBadge || "https://cdn-icons-png.flaticon.com/512/870/870921.png";
-      
-      // SOLUCIÓN BUG 2: Limpiamos la URL que viene de la API y preparamos el enlace
       const urlSitio = equipo.strWebsite ? `https://${equipo.strWebsite.replace(/^https?:\/\//, '')}` : '#';
 
       const card = document.createElement("article");
       card.className = "tarjeta";
 
-      // Agregamos el nuevo botón de enlace (etiqueta <a>) dentro de la tarjeta
       card.innerHTML = `
         <img src="${escudo}" alt="Escudo de ${equipo.strTeam}">
         <h3>${equipo.strTeam}</h3>
@@ -46,5 +53,8 @@ async function cargarDatos() {
   }
 }
 
-// Escuchamos el clic en el botón
+// Escuchamos el clic en el botón principal
 btnCargar.addEventListener("click", cargarDatos);
+
+// NUEVO: Hacemos que si el usuario cambia el menú desplegable, las tarjetas se actualicen solas sin apretar el botón
+selectLiga.addEventListener("change", cargarDatos);
