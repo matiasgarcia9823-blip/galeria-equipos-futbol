@@ -77,3 +77,21 @@ button {
     grid-template-columns: 1fr; 
   }
 }
+/* Estilos para el nuevo botón de visita del club */
+.btn-club {
+  display: inline-block;
+  margin-top: 15px;
+  padding: 8px 14px;
+  background-color: var(--acc);
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+}
+
+.btn-club:hover {
+  background-color: #1d4ed8;
+}
+
